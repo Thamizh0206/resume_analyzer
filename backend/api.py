@@ -1,4 +1,9 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import Body, FastAPI, UploadFile, File, HTTPException
+from backend.text_preprocess import preprocess_text
+from backend.skill_extractor import load_and_prepare_skills, extract_skills
+from backend.matcher import calculate_match
+from backend.semantic_matcher import semantic_similarity
+from backend.hybrid_matcher import calculate_hybrid_score
 import nltk
 import shutil
 import os
@@ -89,3 +94,94 @@ def preprocess_resume_text(text: str = Body(..., embed=True)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/extract-skills")
+def extract_resume_skills(text: str = Body(..., embed=True)):
+    tokens = preprocess_text(text)
+
+    prepared_skills = load_and_prepare_skills("data/skills.csv")
+    extracted_skills = extract_skills(tokens, prepared_skills)
+
+    return {
+        "skill_count": len(extracted_skills),
+        "skills": extracted_skills
+    }
+
+@app.post("/match-job")
+def match_resume_to_job(
+    resume_text: str = Body(..., embed=True),
+    job_text: str = Body(..., embed=True)
+):
+    if not resume_text.strip() or not job_text.strip():
+        raise HTTPException(status_code=400, detail="Resume or Job text is empty")
+
+    # Resume processing
+    resume_tokens = preprocess_text(resume_text)
+    skills_list = load_and_prepare_skills("data/skills.csv")
+    resume_skills = extract_skills(resume_tokens, skills_list)
+
+    # Job description processing
+    job_tokens = preprocess_text(job_text)
+    job_skills = extract_skills(job_tokens, skills_list)
+
+    # Matching
+    match_result = calculate_match(resume_skills, job_skills)
+
+    return {
+        "resume_skills": resume_skills,
+        "job_skills": job_skills,
+        "match_percentage": match_result["match_percentage"],
+        "common_skills": match_result["common_skills"],
+        "missing_skills": match_result["missing_skills"]
+    }
+
+@app.post("/semantic-match")
+def semantic_match(
+    resume_text: str = Body(..., embed=True),
+    job_text: str = Body(..., embed=True)
+):
+    if not resume_text.strip() or not job_text.strip():
+        raise HTTPException(status_code=400, detail="Text input cannot be empty")
+
+    score = semantic_similarity(resume_text, job_text)
+
+    return {
+        "semantic_match_percentage": score
+    }
+
+@app.post("/final-match")
+def final_match(
+    resume_text: str = Body(..., embed=True),
+    job_text: str = Body(..., embed=True)
+):
+    # Resume processing
+    resume_tokens = preprocess_text(resume_text)
+    skills_list = load_and_prepare_skills("data/skills.csv")
+    resume_skills = extract_skills(resume_tokens, skills_list)
+
+    # Job processing
+    job_tokens = preprocess_text(job_text)
+    job_skills = extract_skills(job_tokens, skills_list)
+
+    # Skill-based matching
+    match_result = calculate_match(resume_skills, job_skills)
+    skill_match_percentage = match_result["match_percentage"]
+
+    # Semantic matching
+    semantic_match_percentage = semantic_similarity(resume_text, job_text)
+
+    # Hybrid score
+    final_score = calculate_hybrid_score(
+        skill_match_percentage,
+        semantic_match_percentage
+    )
+
+    return {
+        "resume_skills": resume_skills,
+        "job_skills": job_skills,
+        "skill_match_percentage": skill_match_percentage,
+        "semantic_match_percentage": semantic_match_percentage,
+        "final_match_percentage": final_score,
+        "common_skills": match_result["common_skills"],
+        "missing_skills": match_result["missing_skills"]
+    }
