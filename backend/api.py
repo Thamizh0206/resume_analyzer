@@ -8,15 +8,18 @@ from backend.resume_parser import extract_resume_text
 # -------------------- NLTK SETUP --------------------
 
 def setup_nltk():
-    try:
-        nltk.data.find("tokenizers/punkt")
-    except LookupError:
-        nltk.download("punkt")
+    resources = [
+        "punkt",
+        "punkt_tab",
+        "stopwords"
+    ]
 
-    try:
-        nltk.data.find("corpora/stopwords")
-    except LookupError:
-        nltk.download("stopwords")
+    for resource in resources:
+        try:
+            nltk.data.find(f"tokenizers/{resource}" if "punkt" in resource else f"corpora/{resource}")
+        except LookupError:
+            nltk.download(resource)
+
 
 # -------------------- FASTAPI APP --------------------
 
@@ -69,3 +72,20 @@ def parse_resume(file: UploadFile = File(...)):
         # Always clean up temp file
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
+
+from fastapi import Body, HTTPException
+from backend.text_preprocess import preprocess_text
+
+@app.post("/preprocess-text")
+def preprocess_resume_text(text: str = Body(..., embed=True)):
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="Input text is empty")
+
+    try:
+        tokens = preprocess_text(text)
+        return {
+            "token_count": len(tokens),
+            "tokens_preview": tokens[:30]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
