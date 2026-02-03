@@ -17,6 +17,8 @@ from backend.semantic_matcher import semantic_similarity
 from backend.hybrid_matcher import calculate_hybrid_score
 from backend.resume_parser import extract_resume_text
 from backend.ats_recommender import generate_ats_recommendations
+from backend.resume_rewriter import generate_resume_improvements
+
 
 
 
@@ -201,6 +203,12 @@ def final_match(
         "Medium" if final_score >= 50 else
         "Weak"
     )
+    rewrite_suggestions = generate_resume_improvements(
+    resume_skills,
+    job_skills,
+    match_result["missing_skills"]
+)
+
 
 
     return {
@@ -212,7 +220,8 @@ def final_match(
         "common_skills": match_result["common_skills"],
         "missing_skills": match_result["missing_skills"],
         "ats_recommendations": recommendations,
-        "confidence": confidence
+        "confidence": confidence,
+        "rewrite_suggestions": rewrite_suggestions
     }
 
 @app.get("/", response_class=HTMLResponse)

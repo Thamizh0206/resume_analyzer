@@ -58,4 +58,7 @@ async function analyzeResume() {
         JSON.stringify(data.ats_recommendations, null, 2);
 
     document.getElementById("confidence").innerText = data.confidence;
+
+    document.getElementById("rewriteTips").innerText =
+        JSON.stringify(data.rewrite_suggestions, null, 2);
 }
