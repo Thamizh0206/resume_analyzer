@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>AI Resume Analyzer</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 AI Resume Analyzer</h1>
+            <button class="deploy-btn">Deploy</button>
+        </div>
+
+        <!-- Status -->
+        <div class="status-bar">
+            ✅ Analysis Complete
+        </div>
+
+        <!-- Resume Upload -->
+        <div class="upload-box">
+            <h2>📄 Upload Resume</h2>
+
+            <input type="file" id="resumeFile" accept=".pdf,.docx" />
+            <textarea id="jobDescription" placeholder="Paste Job Description here..."></textarea>
+
+            <button onclick="analyzeResume()">Analyze Resume</button>
+        </div>
+
+        <!-- Resume Strength -->
+        <h2>📌 Resume Strength: <span id="confidence"></span></h2>
+        <!-- Match Scores -->
+        <h2>📈 Match Scores</h2>
+        <div class="metrics">
+            <div class="metric-card">
+                <span>Skill Match %</span>
+                <h1 id="skillMatch">--</h1>
+            </div>
+
+            <div class="metric-card">
+                <span>Semantic Match %</span>
+                <h1 id="semanticMatch">--</h1>
+            </div>
+
+            <div class="metric-card">
+                <span>Final Match %</span>
+                <h1 id="finalMatch">--</h1>
+            </div>
+        </div>
+
+        <!-- Skill Analysis -->
+        <h2>🧠 Skill Analysis</h2>
+        <div class="skills-grid">
+
+            <div class="skill-box">
+                <h3>✅ Resume Skills</h3>
+                <pre id="resumeSkills"></pre>
+            </div>
+
+            <div class="skill-box">
+                <h3>🔗 Common Skills</h3>
+                <pre id="commonSkills"></pre>
+            </div>
+
+            <div class="skill-box">
+                <h3>❌ Missing Skills</h3>
+                <pre id="missingSkills"></pre>
+            </div>
+
+        </div>
+
+        <!-- ATS Recommendations -->
+        <h2>🧩 ATS Recommendations</h2>
+        <div class="skill-box">
+            <pre id="atsTips"></pre>
+        </div>
+
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>
