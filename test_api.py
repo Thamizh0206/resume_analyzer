@@ -2,7 +2,7 @@ import requests
 import json
 import time
 
-url = "http://127.0.0.1:8001/final-match"
+url = "http://127.0.0.1:8000/final-match"
 payload = {
     "resume_text": "Experienced Python Developer with strong background in machine learning, FastAPI, and Docker. Skilled in building RESTful APIs and NLP models.",
     "job_text": "We are looking for a Python Backend Engineer with experience in FastAPI, Docker, and Machine Learning. Knowledge of NLP is a plus."

@@ -126,19 +126,25 @@ export default function Index() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-6 py-12">
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-16 space-y-6"
         >
-          <h2 className="font-heading text-4xl md:text-5xl font-bold mb-4">
-            <span className="gradient-text">AI-Powered</span> Resume Analysis
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+            <Sparkles className="h-4 w-4" />
+            <span>Powered by AI</span>
+          </div>
+
+          <h2 className="font-heading text-5xl md:text-7xl font-bold tracking-tight text-foreground">
+            Land your dream job with <br />
+            <span className="gradient-text">smart analysis</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Get instant insights on how well your resume matches job requirements.
-            Powered by advanced NLP and skill matching algorithms.
+
+          <p className="text-xl text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed">
+            Upload your resume, paste the job description, and get instant AI-powered insights to optimize your application.
           </p>
         </motion.div>
 
@@ -147,11 +153,12 @@ export default function Index() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="glass-card rounded-2xl p-8 mb-8"
+          className="bg-card rounded-3xl p-8 mb-12 shadow-xl border border-border/50"
         >
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-3">
+          <div className="grid md:grid-cols-2 gap-10">
+            <div className="space-y-4">
+              <label className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <FileSearch className="h-5 w-5 text-primary" />
                 Upload Resume
               </label>
               <FileUpload
@@ -161,35 +168,36 @@ export default function Index() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-3">
+            <div className="space-y-4">
+              <label className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Target className="h-5 w-5 text-primary" />
                 Job Description
               </label>
               <Textarea
-                placeholder="Paste the job description here to analyze how well your resume matches..."
+                placeholder="Paste the full job description here..."
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
-                className="min-h-[180px] resize-none bg-secondary/50 border-border rounded-xl"
+                className="min-h-[220px] resize-none bg-secondary/30 border-border focus:border-primary/50 text-base rounded-xl p-4 transition-all"
               />
             </div>
           </div>
 
-          <div className="mt-6 flex justify-center">
+          <div className="mt-8 flex justify-center">
             <Button
               size="lg"
               onClick={handleAnalyze}
               disabled={isAnalyzing || !file || !jobDescription.trim()}
-              className="rounded-xl px-8 glow-primary"
+              className="rounded-full px-10 h-14 text-lg font-medium shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300"
             >
               {isAnalyzing ? (
                 <>
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Analyzing...
+                  <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+                  Analyzing Resume...
                 </>
               ) : (
                 <>
-                  <Brain className="h-5 w-5 mr-2" />
-                  Analyze Resume
+                  <Brain className="h-5 w-5 mr-3" />
+                  Start Analysis
                 </>
               )}
             </Button>
@@ -202,10 +210,10 @@ export default function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="space-y-8"
+            className="space-y-12"
           >
             {/* Confidence Badge */}
-            <div className="flex justify-center">
+            <div className="flex justify-center scale-110">
               <ConfidenceMeter confidence={result.confidence} />
             </div>
 
@@ -235,9 +243,11 @@ export default function Index() {
             </div>
 
             {/* Skills Analysis */}
-            <div>
-              <h3 className="font-heading text-2xl font-semibold mb-6 flex items-center gap-2">
-                <Brain className="h-6 w-6 text-primary" />
+            <div className="bg-card rounded-3xl p-8 border border-border/50 shadow-sm">
+              <h3 className="font-heading text-2xl font-bold mb-8 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Brain className="h-6 w-6 text-primary" />
+                </div>
                 Skills Analysis
               </h3>
               <SkillsSection
@@ -248,7 +258,7 @@ export default function Index() {
             </div>
 
             {/* Recommendations */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-8">
               <RecommendationsCard
                 title="ATS Optimization Tips"
                 icon={Target}
@@ -265,25 +275,7 @@ export default function Index() {
           </motion.div>
         )}
 
-        {/* Empty State */}
-        {!result && !isAnalyzing && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-center py-16"
-          >
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-secondary mb-6">
-              <FileSearch className="h-10 w-10 text-muted-foreground" />
-            </div>
-            <h3 className="font-heading text-xl font-semibold text-foreground mb-2">
-              Ready to Analyze
-            </h3>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              Upload your resume and paste a job description to get started with your personalized analysis.
-            </p>
-          </motion.div>
-        )}
+        {/* Empty State - Removed or Simplified */}
       </main>
 
       {/* Footer */}
