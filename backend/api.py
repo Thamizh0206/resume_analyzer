@@ -42,12 +42,34 @@ def setup_nltk():
 
 app = FastAPI(title="AI Resume Analyzer API")
 
-app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
-templates = Jinja2Templates(directory="frontend/templates")
+from fastapi.middleware.cors import CORSMiddleware
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+app.mount(
+    "/assets",
+    StaticFiles(directory=os.path.join(BASE_DIR, "frontend/dist/assets")),
+    name="assets"
+)
+
+templates = Jinja2Templates(
+    directory=os.path.join(BASE_DIR, "frontend/dist")
+)
+
+
+'''
 @app.on_event("startup")
 def startup_event():
     setup_nltk()
+'''
 
 # -------------------- ROOT ENDPOINT --------------------
 

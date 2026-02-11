@@ -28,7 +28,7 @@ async function analyzeResume() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            resume_text: resumeData.text_preview,
+            resume_text: resumeData.text,
             job_text: jobText
         })
     });
