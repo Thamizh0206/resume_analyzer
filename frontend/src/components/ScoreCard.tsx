@@ -16,13 +16,13 @@ export function ScoreCard({ title, value, icon: Icon, color = "primary", delay =
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
-      className="glass-card rounded-2xl p-6 flex flex-col items-center gap-4"
+      className="bg-card text-card-foreground shadow-lg border border-border/5 rounded-3xl p-6 flex flex-col items-center gap-4"
     >
       <div className="flex items-center gap-2 text-muted-foreground">
         <Icon className="h-4 w-4" />
         <span className="text-sm font-medium">{title}</span>
       </div>
-      
+
       {value !== null ? (
         <ProgressRing value={value} color={color} size={100} strokeWidth={6} />
       ) : (

@@ -41,7 +41,7 @@ export function SkillsSection({ resumeSkills, commonSkills, missingSkills }: Ski
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: sectionIndex * 0.1 }}
-          className="glass-card rounded-2xl p-6"
+          className="bg-card text-card-foreground shadow-lg border border-border/10 rounded-3xl p-6"
         >
           <div className="flex items-center gap-3 mb-4">
             <div className={`
@@ -62,13 +62,13 @@ export function SkillsSection({ resumeSkills, commonSkills, missingSkills }: Ski
               <p className="text-xs text-muted-foreground">{section.description}</p>
             </div>
           </div>
-          
+
           <div className="flex flex-wrap gap-2">
             {section.skills.length > 0 ? (
               section.skills.map((skill, index) => (
-                <SkillBadge 
-                  key={skill} 
-                  skill={skill} 
+                <SkillBadge
+                  key={skill}
+                  skill={skill}
                   variant={section.variant}
                   index={index}
                 />

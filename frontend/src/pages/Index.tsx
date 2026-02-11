@@ -218,6 +218,7 @@ export default function Index() {
             </div>
 
             {/* Score Cards */}
+            {/* Score Cards */}
             <div className="grid md:grid-cols-3 gap-6">
               <ScoreCard
                 title="Skill Match"
@@ -243,7 +244,7 @@ export default function Index() {
             </div>
 
             {/* Skills Analysis */}
-            <div className="bg-card rounded-3xl p-8 border border-border/50 shadow-sm">
+            <div>
               <h3 className="font-heading text-2xl font-bold mb-8 flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
                   <Brain className="h-6 w-6 text-primary" />
