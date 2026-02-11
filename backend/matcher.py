@@ -15,7 +15,7 @@ def calculate_match(resume_skills: list, job_skills: list) -> dict:
     match_percentage = round(
         (len(common_skills) / len(job_set)) * 100, 2
     )
-
+    
     return {
         "match_percentage": match_percentage,
         "common_skills": common_skills,

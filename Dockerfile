@@ -30,13 +30,9 @@ RUN pip install --upgrade pip \
     && pip install --no-cache-dir --default-timeout=120 -r requirements.txt
 
 # Download NLP models at build time
-RUN python -m spacy download en_core_web_sm \
-    && python - <<EOF
-import nltk
-nltk.download("punkt")
-nltk.download("punkt_tab")
-nltk.download("stopwords")
-EOF
+# Download NLP models at build time using a dedicated script
+COPY download_models.py .
+RUN python download_models.py
 
 # Copy backend code
 COPY backend/ ./backend/

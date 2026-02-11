@@ -19,6 +19,8 @@ from backend.resume_parser import extract_resume_text
 from backend.ats_recommender import generate_ats_recommendations
 from backend.resume_rewriter import generate_resume_improvements
 from backend.logger import logger
+from backend.embedding_matcher import embedding_similarity
+
 
 
 
@@ -232,10 +234,14 @@ def final_match(
         # Semantic matching
         semantic_match_percentage = semantic_similarity(resume_text, job_text)
 
+        # Embedding matching
+        embedding_match_percentage = embedding_similarity(resume_text, job_text)
+
         # Hybrid score
         final_score = calculate_hybrid_score(
             skill_match_percentage,
-            semantic_match_percentage
+            semantic_match_percentage,
+            embedding_match_percentage
         )
 
         recommendations = generate_ats_recommendations(
@@ -261,6 +267,7 @@ def final_match(
             "job_skills": job_skills,
             "skill_match_percentage": skill_match_percentage,
             "semantic_match_percentage": semantic_match_percentage,
+            "embedding_match_percentage": embedding_match_percentage,
             "final_match_percentage": final_score,
             "common_skills": match_result["common_skills"],
             "missing_skills": match_result["missing_skills"],
