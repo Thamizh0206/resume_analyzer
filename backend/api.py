@@ -18,6 +18,7 @@ from backend.hybrid_matcher import calculate_hybrid_score
 from backend.resume_parser import extract_resume_text
 from backend.ats_recommender import generate_ats_recommendations
 from backend.resume_rewriter import generate_resume_improvements
+from backend.logger import logger
 
 
 
@@ -82,6 +83,7 @@ def startup_event():
 
 @app.post("/parse-resume")
 def parse_resume(file: UploadFile = File(...)):
+    logger.info(f"Parsing resume: {file.filename}")
     # Validate file type
     if not file.filename.lower().endswith((".pdf", ".docx")):
         raise HTTPException(
@@ -111,6 +113,10 @@ def parse_resume(file: UploadFile = File(...)):
             "text_preview": text[:500]
         }
 
+    except Exception as e:
+        logger.error(f"Error parsing resume {file.filename}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
     finally:
         # Always clean up temp file
         if os.path.exists(temp_file_path):
@@ -128,127 +134,152 @@ def preprocess_resume_text(text: str = Body(..., embed=True)):
             "tokens_preview": tokens[:30]
         }
     except Exception as e:
+        logger.error("Error preprocessing text", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/extract-skills")
 def extract_resume_skills(text: str = Body(..., embed=True)):
-    tokens = preprocess_text(text)
+    try:
+        tokens = preprocess_text(text)
 
-    prepared_skills = load_and_prepare_skills("data/skills.csv")
-    extracted_skills = extract_skills(tokens, prepared_skills)
+        prepared_skills = load_and_prepare_skills("data/skills.csv")
+        extracted_skills = extract_skills(tokens, prepared_skills)
 
-    return {
-        "skill_count": len(extracted_skills),
-        "skills": extracted_skills
-    }
+        return {
+            "skill_count": len(extracted_skills),
+            "skills": extracted_skills
+        }
+    except Exception as e:
+        logger.error("Error extracting skills", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/match-job")
 def match_resume_to_job(
     resume_text: str = Body(..., embed=True),
     job_text: str = Body(..., embed=True)
 ):
-    if not resume_text.strip() or not job_text.strip():
-        raise HTTPException(status_code=400, detail="Resume or Job text is empty")
+    try:
+        if not resume_text.strip() or not job_text.strip():
+            raise HTTPException(status_code=400, detail="Resume or Job text is empty")
 
-    # Resume processing
-    resume_tokens = preprocess_text(resume_text)
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    SKILLS_PATH = os.path.join(BASE_DIR, "data", "skills.csv")
-    skills_list = load_and_prepare_skills(SKILLS_PATH)
-    resume_skills = extract_skills(resume_tokens, skills_list)
+        # Resume processing
+        resume_tokens = preprocess_text(resume_text)
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        SKILLS_PATH = os.path.join(BASE_DIR, "data", "skills.csv")
+        skills_list = load_and_prepare_skills(SKILLS_PATH)
+        resume_skills = extract_skills(resume_tokens, skills_list)
 
-    # Job description processing
-    job_tokens = preprocess_text(job_text)
-    job_skills = extract_skills(job_tokens, skills_list)
+        # Job description processing
+        job_tokens = preprocess_text(job_text)
+        job_skills = extract_skills(job_tokens, skills_list)
 
-    # Matching
-    match_result = calculate_match(resume_skills, job_skills)
+        # Matching
+        match_result = calculate_match(resume_skills, job_skills)
 
-    return {
-        "resume_skills": resume_skills,
-        "job_skills": job_skills,
-        "match_percentage": match_result["match_percentage"],
-        "common_skills": match_result["common_skills"],
-        "missing_skills": match_result["missing_skills"]
-    }
+        return {
+            "resume_skills": resume_skills,
+            "job_skills": job_skills,
+            "match_percentage": match_result["match_percentage"],
+            "common_skills": match_result["common_skills"],
+            "missing_skills": match_result["missing_skills"]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error during job matching", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/semantic-match")
 def semantic_match(
     resume_text: str = Body(..., embed=True),
     job_text: str = Body(..., embed=True)
 ):
-    if not resume_text.strip() or not job_text.strip():
-        raise HTTPException(status_code=400, detail="Text input cannot be empty")
+    try:
+        if not resume_text.strip() or not job_text.strip():
+            raise HTTPException(status_code=400, detail="Text input cannot be empty")
 
-    score = semantic_similarity(resume_text, job_text)
+        score = semantic_similarity(resume_text, job_text)
 
-    return {
-        "semantic_match_percentage": score
-    }
+        return {
+            "semantic_match_percentage": score
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error during semantic matching", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/final-match")
 def final_match(
     resume_text: str = Body(..., embed=True),
     job_text: str = Body(..., embed=True)
 ):
-    # Resume processing
-    resume_tokens = preprocess_text(resume_text)
-    skills_list = load_and_prepare_skills("data/skills.csv")
-    resume_skills = extract_skills(resume_tokens, skills_list)
+    logger.info("Final match calculation started")
+    try:
+        # Resume processing
+        resume_tokens = preprocess_text(resume_text)
+        skills_list = load_and_prepare_skills("data/skills.csv")
+        resume_skills = extract_skills(resume_tokens, skills_list)
 
-    # Job processing
-    job_tokens = preprocess_text(job_text)
-    job_skills = extract_skills(job_tokens, skills_list)
+        # Job processing
+        job_tokens = preprocess_text(job_text)
+        job_skills = extract_skills(job_tokens, skills_list)
 
-    # Skill-based matching
-    match_result = calculate_match(resume_skills, job_skills)
-    skill_match_percentage = match_result["match_percentage"]
+        # Skill-based matching
+        match_result = calculate_match(resume_skills, job_skills)
+        skill_match_percentage = match_result["match_percentage"]
 
-    # Semantic matching
-    semantic_match_percentage = semantic_similarity(resume_text, job_text)
+        # Semantic matching
+        semantic_match_percentage = semantic_similarity(resume_text, job_text)
 
-    # Hybrid score
-    final_score = calculate_hybrid_score(
-        skill_match_percentage,
-        semantic_match_percentage
-    )
+        # Hybrid score
+        final_score = calculate_hybrid_score(
+            skill_match_percentage,
+            semantic_match_percentage
+        )
 
-    recommendations = generate_ats_recommendations(
-    resume_skills,
-    job_skills,
-    match_result["missing_skills"],
-    final_score
-)
+        recommendations = generate_ats_recommendations(
+            resume_skills,
+            job_skills,
+            match_result["missing_skills"],
+            final_score
+        )
 
-    confidence = (
-        "Strong" if final_score >= 75 else
-        "Medium" if final_score >= 50 else
-        "Weak"
-    )
-    rewrite_suggestions = generate_resume_improvements(
-    resume_skills,
-    job_skills,
-    match_result["missing_skills"]
-)
+        confidence = (
+            "Strong" if final_score >= 75 else
+            "Medium" if final_score >= 50 else
+            "Weak"
+        )
+        rewrite_suggestions = generate_resume_improvements(
+            resume_skills,
+            job_skills,
+            match_result["missing_skills"]
+        )
 
-
-
-    return {
-        "resume_skills": resume_skills,
-        "job_skills": job_skills,
-        "skill_match_percentage": skill_match_percentage,
-        "semantic_match_percentage": semantic_match_percentage,
-        "final_match_percentage": final_score,
-        "common_skills": match_result["common_skills"],
-        "missing_skills": match_result["missing_skills"],
-        "ats_recommendations": recommendations,
-        "confidence": confidence,
-        "rewrite_suggestions": rewrite_suggestions
-    }
+        return {
+            "resume_skills": resume_skills,
+            "job_skills": job_skills,
+            "skill_match_percentage": skill_match_percentage,
+            "semantic_match_percentage": semantic_match_percentage,
+            "final_match_percentage": final_score,
+            "common_skills": match_result["common_skills"],
+            "missing_skills": match_result["missing_skills"],
+            "ats_recommendations": recommendations,
+            "confidence": confidence,
+            "rewrite_suggestions": rewrite_suggestions
+        }
+    except Exception as e:
+        logger.error("Error during matching", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal Server Error during matching process")
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
+    logger.info("Home page requested")
     return templates.TemplateResponse(
         "index.html",
         {"request": request}
     )
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}

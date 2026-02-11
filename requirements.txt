@@ -9,3 +9,5 @@ pandas
 numpy
 python-multipart
 jinja2
+python-dotenv
+

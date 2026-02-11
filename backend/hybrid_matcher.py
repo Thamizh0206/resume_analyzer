@@ -1,22 +1,11 @@
-def calculate_hybrid_score(
-    skill_match_percentage: float,
-    semantic_match_percentage: float,
-    skill_weight: float = 0.6,
-    semantic_weight: float = 0.4
-) -> float:
-    """
-    Combines rule-based skill match score and
-    ML-based semantic similarity score into a final score.
+import os
+from dotenv import load_dotenv
 
-    Weights must sum to 1.0
-    """
+load_dotenv()
 
-    if skill_weight + semantic_weight != 1.0:
-        raise ValueError("Skill weight and semantic weight must sum to 1.0")
+WEIGHT_SKILL = float(os.getenv("WEIGHT_SKILL", 0.6))
+WEIGHT_SEMANTIC = float(os.getenv("WEIGHT_SEMANTIC", 0.4))
 
-    final_score = (
-        skill_weight * skill_match_percentage
-        + semantic_weight * semantic_match_percentage
-    )
-
+def calculate_hybrid_score(skill_score, semantic_score):
+    final_score = (WEIGHT_SKILL * skill_score) + (WEIGHT_SEMANTIC * semantic_score)
     return round(final_score, 2)
