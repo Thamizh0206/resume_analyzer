@@ -19,7 +19,7 @@ from backend.resume_parser import extract_resume_text
 from backend.ats_recommender import generate_ats_recommendations
 from backend.resume_rewriter import generate_resume_improvements
 from backend.logger import logger
-from backend.embedding_matcher import embedding_similarity
+
 
 
 
@@ -235,7 +235,7 @@ def final_match(
         semantic_match_percentage = semantic_similarity(resume_text, job_text)
 
         # Embedding matching
-        embedding_match_percentage = embedding_similarity(resume_text, job_text)
+        embedding_match_percentage = semantic_match_percentage # Reuse semantic match since both are now embedding-based
 
         # Hybrid score
         final_score = calculate_hybrid_score(

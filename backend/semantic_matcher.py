@@ -1,19 +1,30 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+import os
+import numpy as np
+import google.generativeai as genai
 
-def semantic_similarity(resume_text: str, job_text: str) -> float:
-    documents = [resume_text, job_text]
+# Configure Gemini
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-    vectorizer = TfidfVectorizer(
-        stop_words="english",
-        ngram_range=(1, 2)
+def cosine_similarity(vec1, vec2):
+    vec1 = np.array(vec1)
+    vec2 = np.array(vec2)
+
+    return np.dot(vec1, vec2) / (
+        np.linalg.norm(vec1) * np.linalg.norm(vec2)
     )
 
-    tfidf_matrix = vectorizer.fit_transform(documents)
+def get_embedding(text):
+    response = genai.embed_content(
+        model="models/embedding-001",
+        content=text
+    )
+    return response["embedding"]
 
-    similarity_score = cosine_similarity(
-        tfidf_matrix[0:1],
-        tfidf_matrix[1:2]
-    )[0][0]
+def semantic_similarity(resume_text, job_text):
 
-    return round(similarity_score * 100, 2)
+    resume_embedding = get_embedding(resume_text)
+    job_embedding = get_embedding(job_text)
+
+    similarity = cosine_similarity(resume_embedding, job_embedding)
+
+    return round(similarity * 100, 2)
