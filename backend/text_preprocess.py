@@ -2,7 +2,7 @@ import re
 import spacy
 import nltk
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import word_tokenizer
 
 # Load spaCy model once
 nlp = spacy.load("en_core_web_sm")
