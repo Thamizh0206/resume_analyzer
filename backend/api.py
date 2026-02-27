@@ -3,11 +3,15 @@ from fastapi import FastAPI, Request, Body, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Core libs
 import os
 import shutil
 import nltk
+import time
 
 # Backend modules
 from backend.text_preprocess import preprocess_text
@@ -43,7 +47,10 @@ def setup_nltk():
 
 # -------------------- FASTAPI APP --------------------
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="AI Resume Analyzer API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -84,7 +91,8 @@ def startup_event():
 # -------------------- RESUME PARSING ENDPOINT --------------------
 
 @app.post("/parse-resume")
-def parse_resume(file: UploadFile = File(...)):
+@limiter.limit("5/minute")
+def parse_resume(request: Request, file: UploadFile = File(...)):
     logger.info(f"Parsing resume: {file.filename}")
     # Validate file type
     if not file.filename.lower().endswith((".pdf", ".docx")):
@@ -125,7 +133,8 @@ def parse_resume(file: UploadFile = File(...)):
             os.remove(temp_file_path)
 
 @app.post("/preprocess-text")
-def preprocess_resume_text(text: str = Body(..., embed=True)):
+@limiter.limit("20/minute")
+def preprocess_resume_text(request: Request, text: str = Body(..., embed=True)):
     if not text.strip():
         raise HTTPException(status_code=400, detail="Input text is empty")
 
@@ -140,7 +149,8 @@ def preprocess_resume_text(text: str = Body(..., embed=True)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/extract-skills")
-def extract_resume_skills(text: str = Body(..., embed=True)):
+@limiter.limit("10/minute")
+def extract_resume_skills(request: Request, text: str = Body(..., embed=True)):
     try:
         tokens = preprocess_text(text)
 
@@ -156,7 +166,9 @@ def extract_resume_skills(text: str = Body(..., embed=True)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/match-job")
+@limiter.limit("10/minute")
 def match_resume_to_job(
+    request: Request,
     resume_text: str = Body(..., embed=True),
     job_text: str = Body(..., embed=True)
 ):
@@ -192,7 +204,9 @@ def match_resume_to_job(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/semantic-match")
+@limiter.limit("10/minute")
 def semantic_match(
+    request: Request,
     resume_text: str = Body(..., embed=True),
     job_text: str = Body(..., embed=True)
 ):
@@ -212,11 +226,14 @@ def semantic_match(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/final-match")
+@limiter.limit("5/minute")
 def final_match(
+    request: Request,
     resume_text: str = Body(..., embed=True),
     job_text: str = Body(..., embed=True)
 ):
     logger.info("Final match calculation started")
+    start_time = time.time()
     try:
         # Resume processing
         resume_tokens = preprocess_text(resume_text)
@@ -243,6 +260,7 @@ def final_match(
             semantic_match_percentage,
             embedding_match_percentage
         )
+        logger.info(f"Calculated match score: {final_score}%")
 
         recommendations = generate_ats_recommendations(
             resume_skills,
@@ -278,6 +296,9 @@ def final_match(
     except Exception as e:
         logger.error("Error during matching", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error during matching process")
+    finally:
+        end_time = time.time()
+        logger.info(f"Final match request completed in {round(end_time - start_time, 2)} seconds")
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):

@@ -11,4 +11,8 @@ python-multipart
 jinja2
 python-dotenv
 
-google-generativeai
+google-genai
+
+redis
+
+slowapi

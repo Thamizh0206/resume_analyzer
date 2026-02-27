@@ -1,6 +1,12 @@
 # Virtual environment
 venv/
-.env/
+.env
+temp_*
+*.txt
+list_models.py
+frontend/dist/
+node_modules/
+
 
 # Python cache
 __pycache__/
