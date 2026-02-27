@@ -18,35 +18,26 @@ RUN npm run build
 # Stage 2: Serve with the backend
 FROM python:3.10-slim
 
-WORKDIR /app
+# Create a non-root user
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH
 
-# Install system dependencies if needed (e.g. for building C extensions or specialized libs)
-# RUN apt-get update && apt-get install -y ...
+WORKDIR $HOME/app
 
-COPY requirements.txt .
+COPY --chown=user requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Increase pip timeout and install python dependencies
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir --default-timeout=120 -r requirements.txt
-
-# Download NLP models at build time
-# Download NLP models at build time using a dedicated script
-COPY download_models.py .
+COPY --chown=user download_models.py .
 RUN python download_models.py
 
-# Copy backend code
-COPY backend/ ./backend/
-COPY data/ ./data/
+COPY --chown=user backend/ ./backend/
+COPY --chown=user data/ ./data/
 
-# Copy built frontend assets from the builder stage
-# We first ensure the destination directory exists
 RUN mkdir -p frontend/dist
+COPY --chown=user --from=frontend-builder /app/frontend/dist ./frontend/dist
 
-# Copy the build artifacts
-COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+EXPOSE 7860
 
-# Expose the API port
-EXPOSE 8000
-
-# Run the application
-CMD ["uvicorn", "backend.api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "backend.api:app", "--host", "0.0.0.0", "--port", "7860"]

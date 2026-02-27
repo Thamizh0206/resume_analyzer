@@ -53,7 +53,7 @@ export default function Index() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const uploadResponse = await fetch("http://127.0.0.1:8000/parse-resume", {
+      const uploadResponse = await fetch("/parse-resume", {
         method: "POST",
         body: formData,
       });
@@ -66,7 +66,7 @@ export default function Index() {
       const resumeText = uploadData.text_preview;
 
       // 2. Analyze
-      const matchResponse = await fetch("http://127.0.0.1:8000/final-match", {
+      const matchResponse = await fetch("/final-match", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
